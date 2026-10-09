@@ -86,6 +86,8 @@ public final class FreeBudsClient: ObservableObject {
     private var deviceRefreshTask: Task<Void, Never>?
     private var playbackPolicy = PlaybackPolicy()
     private var pausedMedia = MacPlayback.PausedMedia()
+    /// Looks for a newer release on GitHub when the user asks.
+    public let updates = UpdateChecker()
     /// Whether the earbuds say audio from this Mac is flowing right now (the A2DP stream is started). nil until
     /// they have said. Unlike the "app is playing" flag of CoreAudio, it drops the moment playback pauses; a
     /// browser keeps that flag on for 10 s or more after a pause.

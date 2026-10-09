@@ -190,3 +190,14 @@
 "Show in Finder" = "Mostrar no Finder";
 "Clear log" = "Apagar registro";
 "Copied" = "Copiado";
+
+/* Updates */
+"Updates" = "Atualizações";
+"Version" = "Versão";
+"Check for updates" = "Verificar atualizações";
+"You have the latest version." = "Você está com a versão mais recente.";
+"Checking…" = "Verificando…";
+"A new version is available." = "Há uma versão nova.";
+"Download version %@" = "Baixar a versão %@";
+"Downloading version %@…" = "Baixando a versão %@…";
+"The app only contacts GitHub when you press the button. After the download, drag the app to Applications and replace the old one." = "O app só acessa o GitHub quando você aperta o botão. Depois do download, arraste o app para Aplicativos e substitua o antigo.";

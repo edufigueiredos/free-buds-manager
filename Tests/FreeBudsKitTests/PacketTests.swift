@@ -325,4 +325,13 @@ final class PlaybackPolicyTests: XCTestCase {
         XCTAssertFalse(FreeBudsClient.isStreaming(state: 0x03))
         XCTAssertFalse(FreeBudsClient.isStreaming(state: 0x01))
     }
+
+    func testVersionComparison() {
+        XCTAssertTrue(UpdateChecker.isNewer("1.0.3", than: "1.0.2"))
+        XCTAssertTrue(UpdateChecker.isNewer("1.0.10", than: "1.0.9"))
+        XCTAssertTrue(UpdateChecker.isNewer("1.1", than: "1.0.9"))
+        XCTAssertFalse(UpdateChecker.isNewer("1.0.2", than: "1.0.2"))
+        XCTAssertFalse(UpdateChecker.isNewer("1.0.2", than: "1.0.3"))
+        XCTAssertEqual(UpdateChecker.stripV("v1.0.3"), "1.0.3")
+    }
 }

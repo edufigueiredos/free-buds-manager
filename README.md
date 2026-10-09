@@ -130,7 +130,15 @@ Terminal:
 xattr -dr com.apple.quarantine "/Applications/Free Buds Manager.app"
 ```
 
+**Atualizando.** Abra **Ajustes › Sobre › Verificar atualizações**. Se houver uma versão mais nova, clique em **Baixar**: o
+app busca o instalador no GitHub e o abre; arraste o app para **Aplicativos** e substitua o antigo. Ele só acessa o GitHub
+quando você aperta o botão.
+
 </details>
+
+**Updating.** Open **Settings › About › Check for updates**. If there is a newer release, press **Download**: the app
+fetches the installer from GitHub and opens it; drag the app to **Applications** and replace the old one. It only contacts
+GitHub when you press the button.
 
 ## Permissions · Permissões
 

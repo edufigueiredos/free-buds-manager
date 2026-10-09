@@ -441,6 +441,43 @@ private struct DiagnosticSection: View {
     }
 }
 
+// MARK: - Updates
+
+/// Checks GitHub for a newer release, only when the button is pressed, and downloads it.
+private struct UpdateSection: View {
+    @ObservedObject var updates: UpdateChecker
+
+    var body: some View {
+        Section("Updates") {
+            LabeledContent("Version") { Text(updates.currentVersion).textSelection(.enabled) }
+            switch updates.state {
+            case .idle, .upToDate, .failed:
+                HStack {
+                    Button("Check for updates") { Task { await updates.check() } }
+                    if updates.state == .upToDate {
+                        Text("You have the latest version.").font(.caption).foregroundStyle(.secondary)
+                    }
+                    if case .failed(let message) = updates.state {
+                        Text(message).font(.caption).foregroundStyle(.red)
+                    }
+                }
+            case .checking:
+                HStack { ProgressView().controlSize(.small); Text("Checking…").font(.caption).foregroundStyle(.secondary) }
+            case .available(let version):
+                HStack {
+                    Button("Download version \(version)") { Task { await updates.download() } }
+                    Text("A new version is available.").font(.caption).foregroundStyle(.secondary)
+                }
+            case .downloading(let version):
+                HStack { ProgressView().controlSize(.small); Text("Downloading version \(version)…").font(.caption).foregroundStyle(.secondary) }
+            }
+            Text("The app only contacts GitHub when you press the button. After the download, drag the app to Applications and replace the old one.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+}
+
 // MARK: - About
 
 private struct AboutTab: View {
@@ -456,6 +493,7 @@ private struct AboutTab: View {
             if let error = client.lastError {
                 Text(error).font(.caption).foregroundStyle(.red)
             }
+            UpdateSection(updates: client.updates)
             Section {
                 Button("Reload from earbuds") { client.refresh() }
                     .disabled(client.status != .connected)
