@@ -134,8 +134,11 @@ xattr -dr com.apple.quarantine "/Applications/Free Buds Manager.app"
 
 ## Permissions · Permissões
 
-**Bluetooth** is needed to talk to the earbuds. **Accessibility** is needed only for *Pause when removed*: the earbuds do
-not tell the Mac to pause, so the app sends the Play/Pause key itself. It only resumes music that it paused.
+**Bluetooth** is needed to talk to the earbuds. *Pause when removed* needs one more permission, depending on what is
+playing: **Automation** (macOS asks the first time) lets the app tell **Music** and **Spotify** to pause and play by name,
+and **Accessibility** lets it press the Play/Pause key for everything else, such as a browser tab. The earbuds do not tell
+the Mac to pause, so the app does it itself. It only resumes music that it paused, and it ignores call apps (Teams, Zoom,
+FaceTime, Webex).
 
 macOS ties a permission to the exact build of an app. Because this app is not signed with a paid certificate, **after an
 update the switch in System Settings can look on while it no longer applies**. Press **Allow** in the app: it clears the
@@ -145,9 +148,11 @@ ask again.
 <details open>
 <summary>🇧🇷 Português</summary>
 
-O **Bluetooth** é necessário para falar com os fones. A **Acessibilidade** só é necessária para o *Pausar ao remover*: o
-fone não manda o Mac pausar, então o app envia a tecla Play/Pause por conta própria. Ele só retoma a música que ele
-mesmo pausou.
+O **Bluetooth** é necessário para falar com os fones. O *Pausar ao remover* precisa de mais uma permissão, conforme o
+que estiver tocando: a **Automação** (o macOS pergunta na primeira vez) deixa o app mandar o **Music** e o **Spotify**
+pausarem e tocarem pelo nome, e a **Acessibilidade** deixa o app apertar a tecla Play/Pause para todo o resto, como uma
+aba do navegador. O fone não manda o Mac pausar, então o app faz isso por conta própria. Ele só retoma a música que ele
+mesmo pausou e ignora apps de chamada (Teams, Zoom, FaceTime, Webex).
 
 O macOS prende a permissão à build exata de um app. Como este app não é assinado com certificado pago, **depois de uma
 atualização a chave em Ajustes do Sistema pode parecer ligada e já não valer**. Clique em **Permitir** no app: ele apaga

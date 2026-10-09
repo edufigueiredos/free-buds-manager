@@ -77,6 +77,8 @@ public final class FreeBudsClient: ObservableObject {
     private var tokenCounter = 0
     private var deviceRefreshTask: Task<Void, Never>?
     private var playbackPolicy = PlaybackPolicy()
+    private var pausedMedia = MacPlayback.PausedMedia()
+    private var pauseTask: Task<Void, Never>?
     private var wearSeen = false
     private var resumeTask: Task<Void, Never>?
     private var askedForAccessibility = false
@@ -784,18 +786,36 @@ public final class FreeBudsClient: ObservableObject {
     private func handleWearChange() {
         let count = (wear.leftInEar ? 1 : 0) + (wear.rightInEar ? 1 : 0)
         let action = playbackPolicy.update(earCount: count, enabled: autoPause == true) {
-            MacPlayback.isTrusted && MacPlayback.isPlaying(to: deviceName)
+            MacPlayback.isPlaying(to: deviceName)
         }
         switch action {
         case .none:
             break
         case .pause:
             resumeTask?.cancel()
-            guard MacPlayback.isTrusted else { askForPlaybackControlIfNeeded(); return }
-            MacPlayback.sendPlayPause()
-            log.info("paused the Mac's music (earbud removed)")
+            pauseMusic()
         case .resume:
             resumeMusic()
+        }
+    }
+
+    /// Pauses whatever is playing to the earbuds (see `MacPlayback.pause`) and remembers what it stopped.
+    /// If nothing could be paused (a browser tab without the Accessibility permission), there is nothing to
+    /// resume later, so the policy forgets this pause.
+    private func pauseMusic() {
+        let playing = MacPlayback.playingBundles(to: deviceName)
+        let name = deviceName
+        pauseTask = Task { [weak self] in
+            let paused = await MacPlayback.pause(playing, deviceName: name)
+            guard let self else { return }
+            self.pausedMedia = paused
+            if paused.isEmpty {
+                self.playbackPolicy.finishedResuming()
+                self.askForPlaybackControlIfNeeded()
+                log.info("could not pause the Mac's music (playing: \(playing.joined(separator: ","), privacy: .public))")
+            } else {
+                log.info("paused the Mac's music (earbud removed): players \(paused.players.joined(separator: ","), privacy: .public), key \(paused.byKey, privacy: .public)")
+            }
         }
     }
 
@@ -805,6 +825,7 @@ public final class FreeBudsClient: ObservableObject {
         resumeTask?.cancel()
         resumeTask = Task { [weak self] in
             guard let self else { return }
+            await self.pauseTask?.value // a pause that is still being checked has to finish first
             let deadline = Date().addingTimeInterval(3)
             while MacPlayback.isPlaying(to: self.deviceName), Date() < deadline {
                 try? await Task.sleep(for: .milliseconds(150))
@@ -812,8 +833,10 @@ public final class FreeBudsClient: ObservableObject {
             }
             guard !Task.isCancelled else { return }
             self.playbackPolicy.finishedResuming()
-            guard MacPlayback.isTrusted, !MacPlayback.isPlaying(to: self.deviceName) else { return }
-            MacPlayback.sendPlayPause()
+            let paused = self.pausedMedia
+            self.pausedMedia = MacPlayback.PausedMedia()
+            guard !paused.isEmpty, !MacPlayback.isPlaying(to: self.deviceName) else { return }
+            MacPlayback.resume(paused)
             log.info("resumed the Mac's music (an earbud is back in)")
         }
     }

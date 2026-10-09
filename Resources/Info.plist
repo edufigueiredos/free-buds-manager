@@ -17,5 +17,7 @@
     <key>NSHighResolutionCapable</key><true/>
     <key>NSBluetoothAlwaysUsageDescription</key>
     <string>Free Buds Manager talks to your earbuds over Bluetooth to read the battery and change noise control and gestures.</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Free Buds Manager asks Music or Spotify to pause when you take an earbud out, and to play again when you put it back.</string>
 </dict>
 </plist>

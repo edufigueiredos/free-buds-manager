@@ -5,9 +5,35 @@ import ApplicationServices
 
 /// Pausing and resuming the Mac's music when an earbud comes out.
 ///
-/// The earbuds never tell the Mac to pause (no AVRCP command arrives), so the app does it: it checks whether
-/// any process is playing to the earbuds and, if so, sends the Play/Pause media key.
+/// The earbuds never tell the Mac to pause (no AVRCP command arrives), so the app does it: it checks which
+/// processes are playing to the earbuds and pauses them.
+///
+/// * Music and Spotify are asked to pause by name (AppleScript, the Automation permission). That targets the
+///   app that is really making the sound.
+/// * Anything else (a browser tab, a video player) gets the Play/Pause media key (the Accessibility
+///   permission). The key goes to whichever app owns "Now Playing", which may not be the one making the sound,
+///   so the effect is checked afterwards and undone if it started another app.
+/// * Call apps are ignored: taking an earbud out during a call must not press Play/Pause.
 public enum MacPlayback {
+    /// Players that can be paused and resumed by name, with no media key.
+    static let scriptablePlayers: Set<String> = ["com.apple.Music", "com.spotify.client"]
+
+    /// Apps whose sound is a call, not music.
+    static let callAppPrefixes = ["com.microsoft.teams", "us.zoom", "com.apple.avconferenced",
+                                  "com.apple.FaceTime", "com.cisco.webex"]
+
+    static func countsAsMusic(_ bundle: String) -> Bool {
+        !callAppPrefixes.contains { bundle.hasPrefix($0) }
+    }
+
+    /// What `pause` stopped, so `resume` starts only that.
+    public struct PausedMedia: Equatable {
+        public var players: [String] = []
+        public var byKey = false
+        public var isEmpty: Bool { players.isEmpty && !byKey }
+        public init() {}
+    }
+
     /// Sending a media key needs the Accessibility permission.
     public static var isTrusted: Bool { AXIsProcessTrusted() }
 
@@ -38,13 +64,70 @@ public enum MacPlayback {
 
     /// True when the earbuds are the Mac's output and some app is playing sound through them.
     public static func isPlaying(to deviceName: String) -> Bool {
+        !playingBundles(to: deviceName).isEmpty
+    }
+
+    /// Bundle ids of the apps playing sound while the earbuds are the Mac's output (call apps left out).
+    /// An app whose id is unknown shows up as "unknown".
+    public static func playingBundles(to deviceName: String) -> [String] {
         guard let output = defaultOutputDevice(), name(of: output).lowercased().contains(deviceName.lowercased()) ||
-                deviceName.lowercased().contains(name(of: output).lowercased()) else { return false }
+                deviceName.lowercased().contains(name(of: output).lowercased()) else { return [] }
 
         if #available(macOS 14.2, *) {
-            return processIDs().contains { property($0, kAudioProcessPropertyIsRunningOutput) == 1 }
+            let bundles = processIDs()
+                .filter { property($0, kAudioProcessPropertyIsRunningOutput) == 1 }
+                .map { bundleID(of: $0) ?? "unknown" }
+            return Array(Set(bundles)).filter(countsAsMusic).sorted()
         }
-        return property(output, kAudioDevicePropertyDeviceIsRunningSomewhere) == 1
+        return property(output, kAudioDevicePropertyDeviceIsRunningSomewhere) == 1 ? ["unknown"] : []
+    }
+
+    /// Pauses what is playing. `playing` is `playingBundles(to:)` taken a moment ago.
+    @MainActor
+    public static func pause(_ playing: [String], deviceName: String,
+                             verifyAfter: Duration = .milliseconds(700)) async -> PausedMedia {
+        var paused = PausedMedia()
+        var needsKey = false
+        for bundle in playing {
+            if scriptablePlayers.contains(bundle), tell(bundle, "pause") {
+                paused.players.append(bundle)
+            } else {
+                needsKey = true
+            }
+        }
+        guard needsKey, isTrusted else { return paused }
+
+        sendPlayPause()
+        try? await Task.sleep(for: verifyAfter)
+
+        let after = Set(playingBundles(to: deviceName))
+        let before = Set(playing)
+        paused.byKey = playing.contains { !paused.players.contains($0) && !after.contains($0) }
+        for bundle in after {
+            if scriptablePlayers.contains(bundle) {
+                // The key missed the player that is making the sound: pause it by name.
+                if tell(bundle, "pause"), !paused.players.contains(bundle) { paused.players.append(bundle) }
+            } else if !before.contains(bundle) {
+                sendPlayPause() // the key started another app: undo it
+            }
+        }
+        return paused
+    }
+
+    /// Starts again only what `pause` stopped.
+    @MainActor
+    public static func resume(_ paused: PausedMedia) {
+        for bundle in paused.players { _ = tell(bundle, "play") }
+        if paused.byKey, isTrusted { sendPlayPause() }
+    }
+
+    /// Tells a player to pause or play. Never launches it: an app that has quit is left alone.
+    @MainActor
+    private static func tell(_ bundle: String, _ verb: String) -> Bool {
+        guard !NSRunningApplication.runningApplications(withBundleIdentifier: bundle).isEmpty else { return false }
+        var error: NSDictionary?
+        _ = NSAppleScript(source: "tell application id \"\(bundle)\" to \(verb)")?.executeAndReturnError(&error)
+        return error == nil
     }
 
     /// Sends one press of the Play/Pause media key.
@@ -89,6 +172,16 @@ public enum MacPlayback {
         var value: UInt32 = 0
         var size = UInt32(MemoryLayout<UInt32>.size)
         return AudioObjectGetPropertyData(object, &addr, 0, nil, &size, &value) == noErr ? value : nil
+    }
+
+    @available(macOS 14.2, *)
+    private static func bundleID(of process: AudioObjectID) -> String? {
+        var addr = address(kAudioProcessPropertyBundleID)
+        var value: Unmanaged<CFString>?
+        var size = UInt32(MemoryLayout<Unmanaged<CFString>?>.size)
+        guard AudioObjectGetPropertyData(process, &addr, 0, nil, &size, &value) == noErr, let value else { return nil }
+        let id = value.takeRetainedValue() as String
+        return id.isEmpty ? nil : id
     }
 
     @available(macOS 14.2, *)

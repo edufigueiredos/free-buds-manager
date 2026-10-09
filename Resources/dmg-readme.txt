@@ -15,6 +15,7 @@ notarizado pela Apple. Arraste o app para Aplicativos e rode isto uma vez no Ter
 
   xattr -dr com.apple.quarantine "/Applications/Free Buds Manager.app"
 
-"Pause when removed" also needs Accessibility (System Settings > Privacy & Security > Accessibility)
-so the app can pause this Mac's music.
-"Pausar ao remover" tambem precisa de Acessibilidade para o app pausar a musica do Mac.
+"Pause when removed": macOS asks to let the app control Music/Spotify (Automation). Browsers and other
+players also need Accessibility (System Settings > Privacy & Security > Accessibility).
+"Pausar ao remover": o macOS pede para o app controlar o Music/Spotify (Automacao). Navegadores e outros
+players tambem precisam de Acessibilidade.
