@@ -86,6 +86,10 @@ public final class FreeBudsClient: ObservableObject {
     private var deviceRefreshTask: Task<Void, Never>?
     private var playbackPolicy = PlaybackPolicy()
     private var pausedMedia = MacPlayback.PausedMedia()
+    /// Whether the earbuds say audio from this Mac is flowing right now (the A2DP stream is started). nil until
+    /// they have said. Unlike the "app is playing" flag of CoreAudio, it drops the moment playback pauses; a
+    /// browser keeps that flag on for 10 s or more after a pause.
+    private var macIsStreaming: Bool?
     private var pauseTask: Task<Void, Never>?
     private var wearSeen = false
     private var resumeTask: Task<Void, Never>?
@@ -185,7 +189,7 @@ public final class FreeBudsClient: ObservableObject {
             MainActor.assumeIsolated { self?.channelClosed() }
         }
         self.transport = transport
-        transport.open { [weak self] result in
+        transport.open(skip: silentAttempts) { [weak self] result in
             MainActor.assumeIsolated {
                 guard let self, self.transport === transport else { return }
                 self.isOpening = false
@@ -724,6 +728,10 @@ public final class FreeBudsClient: ObservableObject {
         }
     }
 
+    /// In the earbuds' connection state for a device, bit 3 means audio is flowing: `01` connected, `03` connected
+    /// and idle, `09` streaming (measured by playing and pausing a video).
+    nonisolated static func isStreaming(state: UInt8) -> Bool { state & 0x08 != 0 }
+
     private static func addressID(_ bytes: [UInt8]) -> String { bytes.map { String(format: "%02x", $0) }.joined() }
 
     /// This Mac's own address as the earbuds write it (reversed), to tell which entry is this computer.
@@ -740,7 +748,10 @@ public final class FreeBudsClient: ObservableObject {
             ?? ConnectedDevice(id: id, name: "", kind: .other, isConnected: false, audioPriority: false,
                                voicePriority: false, isThisMac: id == Self.thisMacID)
         if let name = packet.value(of: 9), !name.isEmpty { device.name = String(decoding: name, as: UTF8.self) }
-        if let state = packet.byte(5) { device.isConnected = state != 0 }
+        if let state = packet.byte(5) {
+            device.isConnected = state != 0
+            if device.isThisMac { macIsStreaming = state != 0 ? Self.isStreaming(state: state) : nil }
+        }
         if let kind = packet.byte(6) { device.kind = kind == 4 ? .computer : (kind == 1 ? .phone : .other) }
         if let voice = packet.byte(7) { device.voicePriority = voice == 1 }
         if let audio = packet.byte(13) { device.audioPriority = audio == 1 }
@@ -753,6 +764,10 @@ public final class FreeBudsClient: ObservableObject {
     private func applyDeviceEvent(_ packet: HuaweiPacket) {
         if let value = packet.value(of: 5), value.count == 7 {
             let id = Self.addressID(Array(value.prefix(6)))
+            if id == Self.thisMacID {
+                macIsStreaming = value[6] != 0 ? Self.isStreaming(state: value[6]) : nil
+                DiagnosticLog.write("stream", "earbuds say audio from this Mac is \(macIsStreaming == true ? "flowing" : "not flowing") (state \(String(format: "%02x", value[6])))")
+            }
             updateDevices { list in
                 if let index = list.firstIndex(where: { $0.id == id }) { list[index].isConnected = value[6] != 0 }
             }
@@ -821,10 +836,11 @@ public final class FreeBudsClient: ObservableObject {
     private func handleWearChange() {
         let count = (wear.leftInEar ? 1 : 0) + (wear.rightInEar ? 1 : 0)
         let action = playbackPolicy.update(earCount: count, enabled: autoPause == true) {
-            MacPlayback.isPlaying(to: deviceName)
+            // CoreAudio can list a browser as playing for 10 s after it paused; the earbuds know right away.
+            MacPlayback.isPlaying(to: deviceName) && macIsStreaming != false
         }
         log.info("ears in: \(count, privacy: .public), pause when removed: \(String(describing: self.autoPause), privacy: .public), playing: \(MacPlayback.playingBundles(to: self.deviceName).joined(separator: ","), privacy: .public), action: \(String(describing: action), privacy: .public)")
-        DiagnosticLog.write("decision", "ears in \(count), pause when removed \(self.autoPause.map { String($0) } ?? "unknown"), \(MacPlayback.describeAudio(to: self.deviceName)) -> \(action)")
+        DiagnosticLog.write("decision", "ears in \(count), pause when removed \(self.autoPause.map { String($0) } ?? "unknown"), earbuds say streaming: \(self.macIsStreaming.map { String($0) } ?? "unknown"), \(MacPlayback.describeAudio(to: self.deviceName)) -> \(action)")
         switch action {
         case .none:
             break
@@ -843,6 +859,7 @@ public final class FreeBudsClient: ObservableObject {
         playbackPolicy.reset()
         pausedMedia = MacPlayback.PausedMedia()
         wearSeen = false
+        macIsStreaming = nil
         if hadPause { DiagnosticLog.write("pause", "earbuds disconnected: forgot the pause made before") }
     }
 

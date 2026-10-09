@@ -70,10 +70,24 @@ public final class RFCOMMTransport: NSObject, IOBluetoothRFCOMMChannelDelegate {
         self.device = device
     }
 
-    public func open(completion: @escaping (Result<Void, Error>) -> Void) {
+    /// `skip` rotates the order in which channels are tried: after the earbuds stayed silent on one channel,
+    /// the next attempt starts with another.
+    public func open(skip: Int = 0, completion: @escaping (Result<Void, Error>) -> Void) {
         openCompletion = completion
-        candidates = [Self.defaultChannel] + serialChannelsFromCache().filter { $0 != Self.defaultChannel }
+        let all = [Self.defaultChannel] + serialChannelsFromCache().filter { $0 != Self.defaultChannel }
+        let shift = all.isEmpty ? 0 : skip % all.count
+        candidates = Array(all.dropFirst(shift)) + Array(all.prefix(shift))
+        DiagnosticLog.write("transport", "channels to try: \(candidates); services the earbuds announce: \(describeServices())")
         openNextCandidate()
+    }
+
+    private func describeServices() -> String {
+        let records = device.services as? [IOBluetoothSDPServiceRecord] ?? []
+        return records.map { record -> String in
+            var id: BluetoothRFCOMMChannelID = 0
+            let channel = record.getRFCOMMChannelID(&id) == kIOReturnSuccess ? "ch \(id)" : "-"
+            return "\(record.getServiceName() ?? "?") (\(channel))"
+        }.joined(separator: ", ")
     }
 
     public func send(_ bytes: [UInt8]) throws {
@@ -109,6 +123,7 @@ public final class RFCOMMTransport: NSObject, IOBluetoothRFCOMMChannelDelegate {
             return
         }
         let id = candidates.removeFirst()
+        DiagnosticLog.write("transport", "opening channel \(id)")
         var newChannel: IOBluetoothRFCOMMChannel?
         let status = device.openRFCOMMChannelAsync(&newChannel, withChannelID: id, delegate: self)
         if status == kIOReturnSuccess {

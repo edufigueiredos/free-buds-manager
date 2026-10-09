@@ -318,4 +318,11 @@ final class PlaybackPolicyTests: XCTestCase {
         XCTAssertEqual(step(1, playing: false), .none) // the first report only records the state
         XCTAssertEqual(step(2, playing: false), .none)
     }
+
+    /// Measured on the earbuds: 03 = connected and idle, 09 = this Mac is streaming audio.
+    func testStreamingStateBit() {
+        XCTAssertTrue(FreeBudsClient.isStreaming(state: 0x09))
+        XCTAssertFalse(FreeBudsClient.isStreaming(state: 0x03))
+        XCTAssertFalse(FreeBudsClient.isStreaming(state: 0x01))
+    }
 }
