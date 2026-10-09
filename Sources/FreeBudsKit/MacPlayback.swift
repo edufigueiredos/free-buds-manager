@@ -22,14 +22,19 @@ public enum MacPlayback {
     static let callAppPrefixes = ["com.microsoft.teams", "us.zoom", "com.apple.avconferenced",
                                   "com.apple.FaceTime", "com.cisco.webex"]
 
+    /// System sounds (the chime when an earbud goes in, notifications) are not music either.
+    static let systemSoundPrefixes = ["systemsoundserverd", "com.apple.systemsoundserverd"]
+
     static func countsAsMusic(_ bundle: String) -> Bool {
-        !callAppPrefixes.contains { bundle.hasPrefix($0) }
+        !(callAppPrefixes + systemSoundPrefixes).contains { bundle.hasPrefix($0) }
     }
 
     /// What `pause` stopped, so `resume` starts only that.
     public struct PausedMedia: Equatable {
         public var players: [String] = []
         public var byKey = false
+        /// Every app that was stopped, by name or by the key.
+        public var bundles: [String] = []
         public var isEmpty: Bool { players.isEmpty && !byKey }
         public init() {}
     }
@@ -95,22 +100,32 @@ public enum MacPlayback {
                 needsKey = true
             }
         }
-        guard needsKey, isTrusted else { return paused }
+        guard needsKey, isTrusted else {
+            paused.bundles = paused.players
+            return paused
+        }
 
         sendPlayPause()
         try? await Task.sleep(for: verifyAfter)
 
         let after = Set(playingBundles(to: deviceName))
         let before = Set(playing)
-        paused.byKey = playing.contains { !paused.players.contains($0) && !after.contains($0) }
-        for bundle in after {
-            if scriptablePlayers.contains(bundle) {
-                // The key missed the player that is making the sound: pause it by name.
-                if tell(bundle, "pause"), !paused.players.contains(bundle) { paused.players.append(bundle) }
-            } else if !before.contains(bundle) {
-                sendPlayPause() // the key started another app: undo it
-            }
+        var misfired = false
+        for bundle in after where !before.contains(bundle) && !scriptablePlayers.contains(bundle) {
+            misfired = true // the key started an app that was not playing: it went to the wrong app
         }
+        for bundle in after where scriptablePlayers.contains(bundle) {
+            // The key missed the player that is making the sound: pause it by name.
+            if tell(bundle, "pause"), !paused.players.contains(bundle) { paused.players.append(bundle) }
+        }
+        if misfired {
+            sendPlayPause() // undo it
+        } else {
+            // A browser keeps reporting sound for several seconds after it pauses, so an app that is still
+            // listed is not proof the key failed: trust the key unless it visibly went to the wrong app.
+            paused.byKey = playing.contains { !paused.players.contains($0) }
+        }
+        paused.bundles = playing.filter { paused.players.contains($0) || paused.byKey }
         return paused
     }
 

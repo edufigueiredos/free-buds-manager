@@ -12,7 +12,12 @@ APP="build/Free Buds Manager.app"
 # A real certificate (Apple Development or Developer ID) keeps permissions across builds:
 #   SIGN_IDENTITY="Developer ID Application: ..." [SIGN_KEYCHAIN=path] scripts/build-app.sh
 IDENTITY="${SIGN_IDENTITY:--}"
+BUNDLE_ID="io.github.edufigueiredos.FreeBudsManager"
 KEYCHAIN_ARGS=()
+REQUIREMENT_ARGS=()
+# Ad-hoc, with the requirement spelled out as "this bundle id" instead of the default "this exact build".
+# The permission macOS stores is that requirement, so it then survives rebuilds and updates.
+[ "$IDENTITY" = "-" ] && REQUIREMENT_ARGS=(--requirements "=designated => identifier \"$BUNDLE_ID\"")
 [ -n "${SIGN_KEYCHAIN:-}" ] && KEYCHAIN_ARGS=(--keychain "$SIGN_KEYCHAIN")
 
 swift build -c release --product FreeBudsManager --arch arm64 --arch x86_64
@@ -32,6 +37,7 @@ cp -R Resources/en.lproj Resources/pt-BR.lproj "$APP/Contents/Resources/"
 codesign --force --deep --options runtime \
     --entitlements Resources/FreeBudsManager.entitlements \
     ${KEYCHAIN_ARGS[@]+"${KEYCHAIN_ARGS[@]}"} \
+    ${REQUIREMENT_ARGS[@]+"${REQUIREMENT_ARGS[@]}"} \
     --sign "$IDENTITY" "$APP"
 
 echo "Built $APP ($VERSION)"

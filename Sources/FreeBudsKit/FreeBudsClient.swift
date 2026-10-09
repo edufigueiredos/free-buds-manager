@@ -788,6 +788,7 @@ public final class FreeBudsClient: ObservableObject {
         let action = playbackPolicy.update(earCount: count, enabled: autoPause == true) {
             MacPlayback.isPlaying(to: deviceName)
         }
+        log.info("ears in: \(count, privacy: .public), pause when removed: \(String(describing: self.autoPause), privacy: .public), playing: \(MacPlayback.playingBundles(to: self.deviceName).joined(separator: ","), privacy: .public), action: \(String(describing: action), privacy: .public)")
         switch action {
         case .none:
             break
@@ -826,16 +827,18 @@ public final class FreeBudsClient: ObservableObject {
         resumeTask = Task { [weak self] in
             guard let self else { return }
             await self.pauseTask?.value // a pause that is still being checked has to finish first
-            let deadline = Date().addingTimeInterval(3)
-            while MacPlayback.isPlaying(to: self.deviceName), Date() < deadline {
-                try? await Task.sleep(for: .milliseconds(150))
-                if Task.isCancelled { return }
-            }
             guard !Task.isCancelled else { return }
             self.playbackPolicy.finishedResuming()
             let paused = self.pausedMedia
             self.pausedMedia = MacPlayback.PausedMedia()
-            guard !paused.isEmpty, !MacPlayback.isPlaying(to: self.deviceName) else { return }
+            guard !paused.isEmpty else { return }
+            // What was paused may still be listed as playing for a few seconds (browsers), so only sound
+            // from some other app means the user started something else and it must be left alone.
+            let others = MacPlayback.playingBundles(to: self.deviceName).filter { !paused.bundles.contains($0) }
+            guard others.isEmpty else {
+                log.info("did not resume: \(others.joined(separator: ","), privacy: .public) is playing")
+                return
+            }
             MacPlayback.resume(paused)
             log.info("resumed the Mac's music (an earbud is back in)")
         }

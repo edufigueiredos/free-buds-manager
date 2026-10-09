@@ -300,4 +300,13 @@ final class PlaybackPolicyTests: XCTestCase {
         XCTAssertEqual(step(1, playing: false), .none)
         XCTAssertEqual(step(2, playing: false), .none)
     }
+
+    /// A browser still reports sound for a while after it pauses; the second earbud coming out must not press
+    /// Play/Pause again, which would start the music.
+    func testSecondEarbudOutDoesNotPauseAgain() {
+        start()
+        XCTAssertEqual(step(1), .pause)
+        XCTAssertEqual(step(0, playing: true), .none)
+        XCTAssertEqual(step(1), .resume)
+    }
 }

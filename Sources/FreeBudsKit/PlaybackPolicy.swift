@@ -26,7 +26,9 @@ struct PlaybackPolicy {
         guard let previous = previousCount else { return .none }
 
         if earCount < previous {
-            guard isPlaying() else { return .none }
+            // Already paused for this removal (the second earbud coming out): pressing Play/Pause again
+            // would start the music.
+            guard pausedAt == nil, isPlaying() else { return .none }
             pausedAt = now
             return .pause
         }
