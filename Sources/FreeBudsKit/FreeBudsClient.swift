@@ -146,6 +146,7 @@ public final class FreeBudsClient: ObservableObject {
 
         guard device.isConnected() else {
             if transport != nil { tearDown() }
+            forgetPause()
             status = .disconnected
             return
         }
@@ -814,6 +815,16 @@ public final class FreeBudsClient: ObservableObject {
         }
     }
 
+    /// The earbuds went away: what the app paused before is no longer its to resume.
+    private func forgetPause() {
+        let hadPause = playbackPolicy.pausedAt != nil || !pausedMedia.isEmpty
+        resumeTask?.cancel()
+        playbackPolicy.reset()
+        pausedMedia = MacPlayback.PausedMedia()
+        wearSeen = false
+        if hadPause { DiagnosticLog.write("pause", "earbuds disconnected: forgot the pause made before") }
+    }
+
     /// Pauses whatever is playing to the earbuds (see `MacPlayback.pause`) and remembers what it stopped.
     /// If nothing could be paused (a browser tab without the Accessibility permission), there is nothing to
     /// resume later, so the policy forgets this pause.
@@ -844,6 +855,12 @@ public final class FreeBudsClient: ObservableObject {
             guard let self else { return }
             await self.pauseTask?.value // a pause that is still being checked has to finish first
             guard !Task.isCancelled else { return }
+            // The earbud may have come out again while this was waiting: leave the music paused (the policy
+            // and what was paused are kept) until one goes back in.
+            guard self.wear.anyInEar else {
+                DiagnosticLog.write("resume", "an earbud is out again: kept the music paused")
+                return
+            }
             self.playbackPolicy.finishedResuming()
             let paused = self.pausedMedia
             self.pausedMedia = MacPlayback.PausedMedia()

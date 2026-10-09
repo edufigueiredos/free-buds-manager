@@ -44,4 +44,12 @@ struct PlaybackPolicy {
 
     /// The resume went through (or was given up on).
     mutating func finishedResuming() { pausedAt = nil }
+
+    /// The earbuds went away (in the case, out of range): forget everything, including a pause made earlier.
+    /// Otherwise the first earbud to come back would "resume" music the app paused minutes ago, which starts
+    /// a video the user has paused by hand since.
+    mutating func reset() {
+        previousCount = nil
+        pausedAt = nil
+    }
 }

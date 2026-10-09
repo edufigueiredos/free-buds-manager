@@ -309,4 +309,13 @@ final class PlaybackPolicyTests: XCTestCase {
         XCTAssertEqual(step(0, playing: true), .none)
         XCTAssertEqual(step(1), .resume)
     }
+
+    /// The earbuds went into the case and came back: a pause made before must not be "resumed".
+    func testNothingResumesAfterTheEarbudsWereAway() {
+        start()
+        XCTAssertEqual(step(1), .pause)
+        policy.reset()
+        XCTAssertEqual(step(1, playing: false), .none) // the first report only records the state
+        XCTAssertEqual(step(2, playing: false), .none)
+    }
 }
