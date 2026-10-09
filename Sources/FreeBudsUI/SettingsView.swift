@@ -377,6 +377,8 @@ private struct AppTab: View {
                 Text(loginError).font(.caption).foregroundStyle(.red)
             }
 
+            UpdateSection(updates: client.updates)
+
             DiagnosticSection()
 
             if client.candidates.count > 1 {
@@ -493,7 +495,6 @@ private struct AboutTab: View {
             if let error = client.lastError {
                 Text(error).font(.caption).foregroundStyle(.red)
             }
-            UpdateSection(updates: client.updates)
             Section {
                 Button("Reload from earbuds") { client.refresh() }
                     .disabled(client.status != .connected)
