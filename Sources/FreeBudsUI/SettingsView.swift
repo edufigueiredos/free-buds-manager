@@ -470,10 +470,17 @@ private struct UpdateSection: View {
                     Button("Download version \(version)") { Task { await updates.download() } }
                     Text("A new version is available.").font(.caption).foregroundStyle(.secondary)
                 }
+            case .ready(let version):
+                HStack {
+                    Button("Install and restart") { updates.install() }
+                    Text("Version \(version) is ready. The app will close and open again.").font(.caption).foregroundStyle(.secondary)
+                }
+            case .installing(let version):
+                HStack { ProgressView().controlSize(.small); Text("Installing version \(version)…").font(.caption).foregroundStyle(.secondary) }
             case .downloading(let version):
                 HStack { ProgressView().controlSize(.small); Text("Downloading version \(version)…").font(.caption).foregroundStyle(.secondary) }
             }
-            Text("The app only contacts GitHub when you press the button. After the download, drag the app to Applications and replace the old one.")
+            Text("The app only contacts GitHub when you press the button.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
