@@ -44,6 +44,12 @@ public struct HuaweiPacket: Equatable, Sendable {
         HuaweiPacket(command: command, parameters: types.map { Parameter($0) })
     }
 
+    /// Writes parameters to the device. Takes `Parameter`s directly, which older Swift compilers need when a value is
+    /// a variable (they read the literal in `(1, value)` as an `Int`).
+    public static func write(_ command: UInt16, _ parameters: [Parameter]) -> HuaweiPacket {
+        HuaweiPacket(command: command, parameters: parameters)
+    }
+
     /// Writes values to the device.
     public static func write(_ command: UInt16, _ values: [(UInt8, [UInt8])]) -> HuaweiPacket {
         HuaweiPacket(command: command, parameters: values.map { Parameter($0.0, $0.1) })

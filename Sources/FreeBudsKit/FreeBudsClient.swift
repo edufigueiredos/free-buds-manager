@@ -381,13 +381,13 @@ public final class FreeBudsClient: ObservableObject {
     public func setANCMode(_ mode: ANCMode) {
         anc.mode = mode
         let value: [UInt8] = [UInt8(mode.rawValue), mode == .off ? 0x00 : 0xFF]
-        change(.write(Command.ancWrite, [(1, value)]), awaitAck: false, thenRead: .read(Command.ancRead, [1, 2]))
+        change(.write(Command.ancWrite, [Parameter(1, value)]), awaitAck: false, thenRead: .read(Command.ancRead, [1, 2]))
     }
 
     public func setCancellationLevel(_ level: CancellationLevel) {
         anc.cancellationLevel = level
         let value: [UInt8] = [UInt8(ANCMode.cancellation.rawValue), UInt8(level.rawValue)]
-        change(.write(Command.ancWrite, [(1, value)]), awaitAck: false, thenRead: .read(Command.ancRead, [1, 2]))
+        change(.write(Command.ancWrite, [Parameter(1, value)]), awaitAck: false, thenRead: .read(Command.ancRead, [1, 2]))
     }
 
     public func setAwarenessLevel(_ level: AwarenessLevel) {
@@ -474,7 +474,7 @@ public final class FreeBudsClient: ObservableObject {
     public func setDoubleTap(code: Int8) {
         gestures.doubleTap = code
         let value = [UInt8(bitPattern: code)]
-        change(.write(Command.doubleTapWrite, [(1, value), (2, value)]), awaitAck: true,
+        change(.write(Command.doubleTapWrite, [Parameter(1, value), Parameter(2, value)]), awaitAck: true,
                thenRead: .read(Command.doubleTapRead, [1, 2, 4]))
     }
 
@@ -498,14 +498,14 @@ public final class FreeBudsClient: ObservableObject {
     public func setANCCycle(code: Int8) {
         gestures.ancCycle = code
         let value = [UInt8(bitPattern: code)]
-        change(.write(Command.longTapANCWrite, [(1, value), (2, value)]),
+        change(.write(Command.longTapANCWrite, [Parameter(1, value), Parameter(2, value)]),
                awaitAck: true, thenRead: .read(Command.longTapANCRead, [1, 2]))
     }
 
     public func setSwipe(code: Int8) {
         gestures.swipe = code
         let value = [UInt8(bitPattern: code)]
-        change(.write(Command.swipeWrite, [(1, value), (2, value)]), awaitAck: true,
+        change(.write(Command.swipeWrite, [Parameter(1, value), Parameter(2, value)]), awaitAck: true,
                thenRead: .read(Command.swipeRead, [1, 2]))
     }
 

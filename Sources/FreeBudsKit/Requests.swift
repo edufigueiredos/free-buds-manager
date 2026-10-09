@@ -55,7 +55,7 @@ enum Requests {
     // MARK: Multi-connection
 
     static func deviceAction(_ step: UInt8, address: [UInt8]) -> HuaweiPacket {
-        .write(Command.deviceAction, [(step, address)])
+        .write(Command.deviceAction, [Parameter(step, address)])
     }
 
     /// Picks the device whose assistant the earbuds work with; `nil` clears it.
@@ -96,6 +96,6 @@ enum Requests {
     static func caseOpeningTone(_ enabled: Bool, block: [UInt8]) -> HuaweiPacket {
         var copy = block
         if copy.count > 1 { copy[1] = enabled ? 1 : 0 }
-        return .write(Command.feature, [(1, [FeatureID.caseOptions]), (2, copy)])
+        return .write(Command.feature, [Parameter(1, [FeatureID.caseOptions]), Parameter(2, copy)])
     }
 }
