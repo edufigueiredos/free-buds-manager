@@ -1,0 +1,43 @@
+name: Release
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  dmg:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test
+        run: swift test
+      - name: Import the signing identity (optional)
+        env:
+          SIGNING_P12_BASE64: ${{ secrets.SIGNING_P12_BASE64 }}
+          SIGNING_P12_PASSWORD: ${{ secrets.SIGNING_P12_PASSWORD }}
+          SIGNING_IDENTITY_NAME: ${{ secrets.SIGNING_IDENTITY_NAME }}
+        run: |
+          # With a real certificate (Apple Development or Developer ID) as secrets, every release is signed with
+          # the same identity and macOS permissions survive updates. Without them the build is ad-hoc signed.
+          # A self-signed certificate is useless here: macOS does not honour it.
+          if [ -n "$SIGNING_P12_BASE64" ]; then
+            KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+            echo "$SIGNING_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/identity.p12"
+            security create-keychain -p ci "$KEYCHAIN"
+            security set-keychain-settings "$KEYCHAIN"
+            security unlock-keychain -p ci "$KEYCHAIN"
+            security import "$RUNNER_TEMP/identity.p12" -k "$KEYCHAIN" -P "$SIGNING_P12_PASSWORD" -T /usr/bin/codesign
+            security set-key-partition-list -S apple-tool:,apple: -s -k ci "$KEYCHAIN"
+            echo "SIGN_IDENTITY=${SIGNING_IDENTITY_NAME:?set the SIGNING_IDENTITY_NAME secret}" >> "$GITHUB_ENV"
+            echo "SIGN_KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
+          fi
+      - name: Build
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}" scripts/build-app.sh
+          VERSION="${GITHUB_REF_NAME#v}" scripts/make-dmg.sh
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/*.dmg --title "$GITHUB_REF_NAME" --generate-notes

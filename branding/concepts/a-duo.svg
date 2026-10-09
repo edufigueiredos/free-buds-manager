@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b2319"/><stop offset="1" stop-color="#090705"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="0.5" cy="0" r="0.85">
+      <stop offset="0" stop-color="#f6d88a" stop-opacity="0.30"/><stop offset="0.65" stop-color="#f6d88a" stop-opacity="0"/>
+    </radialGradient>
+    
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fde8ab"/><stop offset="0.5" stop-color="#e5b955"/><stop offset="1" stop-color="#a77721"/>
+    </linearGradient>
+    <path id="bud" d="M -84,0 A 84,84 0 0 1 84,0 C 84,26 76,44 66,56 L 62,196 Q 60,230 34,230 Q 8,230 6,196 L 4,70 C -50,64 -84,36 -84,0 Z"/>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="188" fill="url(#bg)"/>
+  <rect x="100" y="100" width="824" height="824" rx="188" fill="url(#shine)"/>
+  <rect x="101" y="101" width="822" height="822" rx="187" fill="none" stroke="#f6d88a" stroke-opacity="0.2" stroke-width="2"/>
+  <g fill="none" stroke="url(#gold)" stroke-width="26" stroke-linecap="round" transform="translate(0,90)">
+    <path d="M 392 330 A 130 130 0 0 1 632 330"/>
+    <path d="M 336 296 A 190 190 0 0 1 688 296" stroke-opacity="0.72"/>
+    <path d="M 282 262 A 250 250 0 0 1 742 262" stroke-opacity="0.42"/>
+  </g>
+  <g fill="url(#gold)">
+    <use href="#bud" transform="translate(610,580)"/>
+    <use href="#bud" transform="translate(414,580) scale(-1,1)"/>
+  </g>
+  <g fill="#17110a" fill-opacity="0.8">
+    <ellipse cx="584" cy="588" rx="14" ry="26"/>
+    <ellipse cx="440" cy="588" rx="14" ry="26"/>
+  </g>
+</svg>

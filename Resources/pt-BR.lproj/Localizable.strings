@@ -1,0 +1,183 @@
+/* Noise control */
+"Off" = "Desligado";
+"Noise cancelling" = "Cancelamento";
+"Awareness" = "Transparência";
+"Noise control" = "Controle de ruído";
+"Strength" = "Intensidade";
+"Voice" = "Voz";
+"Comfort" = "Conforto";
+"Balanced" = "Equilibrado";
+"Ultra" = "Ultra";
+"Dynamic" = "Dinâmico";
+"Voice boost" = "Realce de voz";
+"Normal" = "Normal";
+
+/* Menu */
+"Connected" = "Conectado";
+"Connecting…" = "Conectando…";
+"Not connected to this Mac" = "Não conectado a este Mac";
+"No earbuds found" = "Nenhum fone encontrado";
+"Earbuds in ear" = "Fones nos ouvidos";
+"Left" = "Esquerdo";
+"Right" = "Direito";
+"Case" = "Estojo";
+"Pause when removed" = "Pausar ao remover";
+"Low latency (games)" = "Baixa latência (jogos)";
+"Connect to this Mac" = "Conectar a este Mac";
+"Open the case near this Mac." = "Abra o estojo perto deste Mac.";
+"Connect" = "Conectar";
+"Pair your FreeBuds in System Settings › Bluetooth, then come back." = "Pareie seus FreeBuds em Ajustes do Sistema › Bluetooth e volte aqui.";
+"Settings…" = "Ajustes…";
+"Quit" = "Sair";
+
+/* Settings */
+"Gestures" = "Gestos";
+"Sound" = "Som";
+"App" = "App";
+"Device" = "Fone";
+"Connect the earbuds to change their gestures." = "Conecte os fones para alterar os gestos.";
+"Double tap" = "Toque duplo";
+"Left earbud" = "Fone esquerdo";
+"Right earbud" = "Fone direito";
+"Press and hold" = "Pressionar e segurar";
+"Noise control cycle" = "Ciclo do controle de ruído";
+"The earbuds keep one cycle for both sides." = "O fone guarda um único ciclo para os dois lados.";
+"Swipe" = "Deslizar";
+"Swipe on the stem" = "Deslizar na haste";
+"Connection" = "Conexão";
+"Connect the earbuds to see their sound options." = "Conecte os fones para ver as opções de som.";
+"Show battery level in the menu bar" = "Mostrar a bateria na barra de menus";
+"Open at login" = "Abrir ao iniciar sessão";
+"Earbuds" = "Fones";
+"Name" = "Nome";
+"Model" = "Modelo";
+"Firmware" = "Firmware";
+"Hardware" = "Hardware";
+"Serial number" = "Número de série";
+"Reload from earbuds" = "Recarregar do fone";
+"Unofficial. Not affiliated with or endorsed by Huawei." = "Não oficial. Sem vínculo com a Huawei nem aprovado por ela.";
+
+/* Gesture actions */
+"Nothing" = "Nada";
+"Voice assistant" = "Assistente de voz";
+"Play / Pause" = "Reproduzir / Pausar";
+"Next track" = "Próxima faixa";
+"Previous track" = "Faixa anterior";
+"Switch noise control" = "Alternar controle de ruído";
+"Volume up" = "Aumentar volume";
+"Volume down" = "Diminuir volume";
+"Adjust volume" = "Ajustar volume";
+"Action %lld" = "Ação %lld";
+"Mode %lld" = "Modo %lld";
+"Off ↔ Noise cancelling" = "Desligado ↔ Cancelamento";
+"Off ↔ Noise cancelling ↔ Awareness" = "Desligado ↔ Cancelamento ↔ Transparência";
+"Noise cancelling ↔ Awareness" = "Cancelamento ↔ Transparência";
+"Off ↔ Awareness" = "Desligado ↔ Transparência";
+"Prefer connection stability" = "Priorizar estabilidade da conexão";
+"Prefer sound quality" = "Priorizar qualidade do som";
+
+/* Added with the phone-app capture */
+"Cozy" = "Aconchegante";
+"General" = "Geral";
+"Dual engine" = "Mecanismo duplo";
+"Standard" = "Padrão";
+"Adaptive" = "Adaptável";
+"Fixed" = "Fixo";
+"Head tracking" = "Acompanhamento da cabeça";
+"Spatial audio" = "Áudio espacial";
+"Equalizer" = "Equalizador";
+"Adaptive EQ" = "EQ adaptável";
+"Bass" = "Graves";
+"Classic" = "Clássico";
+"Movie" = "Filme";
+"Podcast" = "Podcast";
+"Games" = "Jogos";
+"Impact" = "Impacto";
+"Answer / end call" = "Atender / encerrar chamada";
+"Reject call" = "Rejeitar chamada";
+"Noise control" = "Controle de ruído";
+"More noise" = "Mais ruído";
+"Less noise" = "Menos ruído";
+"Adaptive volume" = "Volume adaptável";
+"Conversation awareness" = "Reconhecimento de conversa";
+"Pinch (squeeze the stem)" = "Pinçar (apertar a haste)";
+"Once" = "Uma vez";
+"Twice" = "Duas vezes";
+"Three times" = "Três vezes";
+"Once, during a call" = "Uma vez, durante chamada";
+"Twice, during a call" = "Duas vezes, durante chamada";
+"Pinch and hold" = "Pinçar e segurar";
+"Pinch and hold switches between" = "Pinçar e segurar alterna entre";
+"Tap (touch panel)" = "Tocar (painel de toque)";
+"Double tap, during a call" = "Toque duplo, durante chamada";
+"Triple tap, left" = "Toque triplo, esquerdo";
+"Triple tap, right" = "Toque triplo, direito";
+"Swipe up / down" = "Deslizar para cima / para baixo";
+"Noise cancelling with one earbud" = "Cancelamento de ruído com um fone";
+"Head control (nod to answer a call)" = "Controle de cabeça (acenar para atender)";
+
+/* Themes */
+"Appearance" = "Aparência";
+"Theme" = "Tema";
+"Gold" = "Dourado";
+"Black" = "Preto";
+"White" = "Branco";
+"Neon" = "Neon";
+"Classic" = "Clássico";
+"Neon color" = "Cor do neon";
+"Custom" = "Personalizada";
+"Pure black background: on OLED and Retina XDR displays the unlit pixels stay off." = "Fundo preto puro: em telas OLED e Retina XDR os pixels apagados ficam desligados.";
+
+/* Devices and custom equalizer */
+"Devices" = "Dispositivos";
+"This Mac" = "Este Mac";
+"Disconnect" = "Desconectar";
+"Multi-connection" = "Multi-conexão";
+"Stay connected to several devices and switch between them." = "Ficar conectado a vários dispositivos e alternar entre eles.";
+"Turning this off disconnects every device but one, which may be this Mac." = "Desligar desconecta todos os dispositivos menos um, que pode ser este Mac.";
+"Prioritize all audio" = "Priorizar todo o áudio";
+"The earbuds play audio only from this device, including calls and the assistant." = "Os fones tocam áudio só deste dispositivo, incluindo chamadas e o assistente.";
+"Prioritize voice messages" = "Priorizar mensagens de voz";
+"The earbuds work only with this device's assistant." = "Os fones funcionam só com o assistente deste dispositivo.";
+"Presets" = "Predefinições";
+"Custom profiles" = "Perfis personalizados";
+"New profile" = "Novo perfil";
+"Edit" = "Editar";
+"Delete" = "Excluir";
+"Save" = "Salvar";
+"Cancel" = "Cancelar";
+"Reset" = "Redefinir";
+"Name" = "Nome";
+"My sound effect" = "Meu efeito de som";
+"Drag the sliders while music is playing to hear the change." = "Arraste os controles com música tocando para ouvir a mudança.";
+"The earbuds are full: delete a profile to add another." = "Os fones estão cheios: exclua um perfil para adicionar outro.";
+"Delete this profile?" = "Excluir este perfil?";
+"No custom profiles yet." = "Nenhum perfil personalizado ainda.";
+"Preset %lld" = "Predefinição %lld";
+"Equalizer" = "Equalizador";
+
+/* Charging case */
+"Charging case" = "Estojo de carregamento";
+"Charging case tone" = "Tom do estojo de carregamento";
+"Case opening tone" = "Tom de abertura do estojo";
+"The case tones can only be changed with both earbuds in the case and the lid open." = "Os tons do estojo só podem ser alterados com os dois fones no estojo e a tampa aberta.";
+"Turn off" = "Desligar";
+"Turn off multi-connection?" = "Desligar a multi-conexão?";
+"Connect the earbuds to see their devices." = "Conecte os fones para ver os dispositivos.";
+
+/* Pause when removed, on this Mac */
+"To pause this Mac's music, allow Accessibility." = "Para pausar a música deste Mac, permita a Acessibilidade.";
+"Allow" = "Permitir";
+"Pause when removed" = "Pausar ao remover";
+"This Mac's music pauses and resumes with the earbuds." = "A música deste Mac pausa e retoma junto com os fones.";
+"Allow Accessibility so the app can pause this Mac's music." = "Permita a Acessibilidade para o app poder pausar a música deste Mac.";
+"The earbuds do not send a pause to the Mac, so the app sends the Play/Pause key when an earbud comes out and again when both are back in. It only resumes what it paused." = "O fone não manda uma pausa ao Mac, então o app envia a tecla Play/Pause quando um fone sai e de novo quando os dois voltam. Ele só retoma o que ele mesmo pausou.";
+"Disconnect this Mac" = "Desconectar este Mac";
+"Liquid Glass" = "Liquid Glass";
+"After an update the switch can look on and still not apply, because macOS ties the permission to one build. Allow clears the old one: then switch this app on in the list." = "Depois de uma atualização a chave pode parecer ligada e não valer, porque o macOS prende a permissão a uma build. Permitir apaga a antiga: depois ligue este app na lista.";
+
+/* Earbuds connected but silent */
+"Connected, not answering" = "Conectado, sem responder";
+"The earbuds are connected but not answering the app." = "Os fones estão conectados, mas não respondem ao app.";
+"They talk to one app at a time. Close the Huawei app on your phone, or put the earbuds in the case and take them out." = "Eles falam com um app por vez. Feche o app da Huawei no celular, ou coloque os fones no estojo e tire de novo.";
+"Try again" = "Tentar de novo";
