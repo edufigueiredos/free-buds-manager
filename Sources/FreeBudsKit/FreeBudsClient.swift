@@ -34,7 +34,12 @@ public final class FreeBudsClient: ObservableObject {
     }
 
     @Published public private(set) var status: Status = .noDevice {
-        didSet { if status != oldValue { log.info("status -> \(String(describing: self.status), privacy: .public)") } }
+        didSet {
+            if status != oldValue {
+                log.info("status -> \(String(describing: self.status), privacy: .public)")
+                DiagnosticLog.write("status", "\(oldValue) -> \(self.status)")
+            }
+        }
     }
     @Published public private(set) var deviceName = ""
     @Published public private(set) var candidates: [PairedDevice] = []
@@ -95,6 +100,7 @@ public final class FreeBudsClient: ObservableObject {
 
     public func start() {
         guard timer == nil else { return }
+        DiagnosticLog.startSession()
         tick()
         timer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.tick() }
@@ -126,7 +132,10 @@ public final class FreeBudsClient: ObservableObject {
     }
 
     private func tick() {
-        if canControlMacPlayback != MacPlayback.isTrusted { canControlMacPlayback = MacPlayback.isTrusted }
+        if canControlMacPlayback != MacPlayback.isTrusted {
+            canControlMacPlayback = MacPlayback.isTrusted
+            DiagnosticLog.write("permission", "Accessibility allowed: \(canControlMacPlayback)")
+        }
         guard let address = resolveAddress(),
               let device = BluetoothDirectory.device(address: address) else {
             tearDown()
@@ -169,6 +178,7 @@ public final class FreeBudsClient: ObservableObject {
                     Task { await self.readEverything() }
                 case .failure(let error):
                     log.error("open failed: \(error.localizedDescription, privacy: .public)")
+                    DiagnosticLog.write("channel", "open failed: \(error.localizedDescription)")
                     self.lastError = error.localizedDescription
                     self.nextAttempt = Date().addingTimeInterval(8)
                     self.tearDown()
@@ -190,11 +200,13 @@ public final class FreeBudsClient: ObservableObject {
         if receivedSinceOpen {
             // It worked and then stopped: a new channel is usually enough.
             log.error("the earbuds stopped answering; reopening the control channel")
+            DiagnosticLog.write("channel", "the earbuds stopped answering for 8 s; reopening the control channel")
             status = .disconnected
             nextAttempt = Date().addingTimeInterval(2)
         } else {
             silentAttempts += 1
             log.error("the earbuds do not answer the control channel (attempt \(self.silentAttempts, privacy: .public))")
+            DiagnosticLog.write("channel", "the earbuds do not answer the control channel (attempt \(self.silentAttempts))")
             status = .noAnswer
             nextAttempt = Date().addingTimeInterval(silentAttempts < 3 ? 6 : 20)
         }
@@ -778,6 +790,7 @@ public final class FreeBudsClient: ObservableObject {
         wear = state
         inEar = state.anyInEar
         log.info("wear: left \(state.leftInEar ? "in" : "out", privacy: .public) right \(state.rightInEar ? "in" : "out", privacy: .public) (case: \(state.leftInCase, privacy: .public)/\(state.rightInCase, privacy: .public))")
+        DiagnosticLog.write("wear", "left \(state.leftInEar ? "in" : "out"), right \(state.rightInEar ? "in" : "out"), case \(state.leftInCase ? "L" : "-")\(state.rightInCase ? "R" : "-")")
         handleWearChange()
     }
 
@@ -789,6 +802,7 @@ public final class FreeBudsClient: ObservableObject {
             MacPlayback.isPlaying(to: deviceName)
         }
         log.info("ears in: \(count, privacy: .public), pause when removed: \(String(describing: self.autoPause), privacy: .public), playing: \(MacPlayback.playingBundles(to: self.deviceName).joined(separator: ","), privacy: .public), action: \(String(describing: action), privacy: .public)")
+        DiagnosticLog.write("decision", "ears in \(count), pause when removed \(self.autoPause.map { String($0) } ?? "unknown"), \(MacPlayback.describeAudio(to: self.deviceName)) -> \(action)")
         switch action {
         case .none:
             break
@@ -814,8 +828,10 @@ public final class FreeBudsClient: ObservableObject {
                 self.playbackPolicy.finishedResuming()
                 self.askForPlaybackControlIfNeeded()
                 log.info("could not pause the Mac's music (playing: \(playing.joined(separator: ","), privacy: .public))")
+                DiagnosticLog.write("pause", "could not pause [\(playing.joined(separator: ", "))]; Accessibility allowed: \(MacPlayback.isTrusted)")
             } else {
                 log.info("paused the Mac's music (earbud removed): players \(paused.players.joined(separator: ","), privacy: .public), key \(paused.byKey, privacy: .public)")
+                DiagnosticLog.write("pause", "paused: by name [\(paused.players.joined(separator: ", "))], by key \(paused.byKey)")
             }
         }
     }
@@ -837,10 +853,12 @@ public final class FreeBudsClient: ObservableObject {
             let others = MacPlayback.playingBundles(to: self.deviceName).filter { !paused.bundles.contains($0) }
             guard others.isEmpty else {
                 log.info("did not resume: \(others.joined(separator: ","), privacy: .public) is playing")
+                DiagnosticLog.write("resume", "did not resume: [\(others.joined(separator: ", "))] is playing")
                 return
             }
-            MacPlayback.resume(paused)
+            await MacPlayback.resume(paused, deviceName: self.deviceName)
             log.info("resumed the Mac's music (an earbud is back in)")
+            DiagnosticLog.write("resume", "resumed: by name [\(paused.players.joined(separator: ", "))], by key \(paused.byKey)")
         }
     }
 
@@ -898,6 +916,9 @@ public final class FreeBudsClient: ObservableObject {
         state.serial = text(9) ?? state.serial
         state.submodel = text(10) ?? state.submodel
         state.model = text(15) ?? state.model
+        if state.model != info.model || state.firmware != info.firmware {
+            DiagnosticLog.write("earbuds", "model \(state.model ?? "?"), firmware \(state.firmware ?? "?")")
+        }
         info = state
     }
 

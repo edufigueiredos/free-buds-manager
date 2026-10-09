@@ -377,6 +377,8 @@ private struct AppTab: View {
                 Text(loginError).font(.caption).foregroundStyle(.red)
             }
 
+            DiagnosticSection()
+
             if client.candidates.count > 1 {
                 Picker("Earbuds", selection: Binding(
                     get: { client.selectedAddress ?? client.candidates.first?.address ?? "" },
@@ -397,6 +399,45 @@ private struct AppTab: View {
             loginError = error.localizedDescription
         }
         launchAtLogin = SMAppService.mainApp.status == .enabled
+    }
+}
+
+// MARK: - Diagnostic log
+
+/// A switch for the diagnostic log, plus what is needed to send it with a bug report.
+private struct DiagnosticSection: View {
+    @State private var enabled = DiagnosticLog.isEnabled
+    @State private var copied = false
+
+    var body: some View {
+        Section("Diagnostic log") {
+            Toggle("Record a diagnostic log", isOn: Binding(get: { enabled }, set: { value in
+                DiagnosticLog.setEnabled(value)
+                enabled = value
+                copied = false
+            }))
+            Text("Records what the app sees and decides (earbuds in or out, which apps were making sound, permissions) to help find bugs. It does not record Bluetooth addresses, other devices' names or what you play. Turn it on, repeat the problem, then send the log.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            if enabled {
+                HStack {
+                    Button("Copy log") {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(DiagnosticLog.contents(), forType: .string)
+                        copied = true
+                    }
+                    Button("Show in Finder") {
+                        if FileManager.default.fileExists(atPath: DiagnosticLog.fileURL.path) {
+                            NSWorkspace.shared.activateFileViewerSelecting([DiagnosticLog.fileURL])
+                        } else {
+                            NSWorkspace.shared.open(DiagnosticLog.directory)
+                        }
+                    }
+                    Button("Clear log") { DiagnosticLog.clear(); copied = false }
+                    if copied { Text("Copied").font(.caption).foregroundStyle(.secondary) }
+                }
+            }
+        }
     }
 }
 

@@ -72,19 +72,42 @@ public enum MacPlayback {
         !playingBundles(to: deviceName).isEmpty
     }
 
-    /// Bundle ids of the apps playing sound while the earbuds are the Mac's output (call apps left out).
-    /// An app whose id is unknown shows up as "unknown".
-    public static func playingBundles(to deviceName: String) -> [String] {
-        guard let output = defaultOutputDevice(), name(of: output).lowercased().contains(deviceName.lowercased()) ||
-                deviceName.lowercased().contains(name(of: output).lowercased()) else { return [] }
+    /// What the Mac's audio looks like right now.
+    struct AudioSnapshot {
+        var outputName: String
+        var isEarbuds: Bool
+        /// Bundle ids of every process sending sound out, call apps included. "unknown" when the id is not known.
+        var running: [String]
+    }
+
+    static func snapshot(deviceName: String) -> AudioSnapshot {
+        guard let output = defaultOutputDevice() else { return AudioSnapshot(outputName: "none", isEarbuds: false, running: []) }
+        let outputName = name(of: output)
+        let isEarbuds = !deviceName.isEmpty && (outputName.lowercased().contains(deviceName.lowercased()) ||
+                                                deviceName.lowercased().contains(outputName.lowercased()))
+        guard isEarbuds else { return AudioSnapshot(outputName: outputName, isEarbuds: false, running: []) }
 
         if #available(macOS 14.2, *) {
             let bundles = processIDs()
                 .filter { property($0, kAudioProcessPropertyIsRunningOutput) == 1 }
                 .map { bundleID(of: $0) ?? "unknown" }
-            return Array(Set(bundles)).filter(countsAsMusic).sorted()
+            return AudioSnapshot(outputName: outputName, isEarbuds: true, running: Array(Set(bundles)).sorted())
         }
-        return property(output, kAudioDevicePropertyDeviceIsRunningSomewhere) == 1 ? ["unknown"] : []
+        let running = property(output, kAudioDevicePropertyDeviceIsRunningSomewhere) == 1
+        return AudioSnapshot(outputName: outputName, isEarbuds: true, running: running ? ["unknown"] : [])
+    }
+
+    /// Bundle ids of the apps playing sound while the earbuds are the Mac's output (call apps and system
+    /// sounds left out).
+    public static func playingBundles(to deviceName: String) -> [String] {
+        snapshot(deviceName: deviceName).running.filter(countsAsMusic)
+    }
+
+    /// One line for the diagnostic log: where the sound goes and who is making it.
+    public static func describeAudio(to deviceName: String) -> String {
+        let audio = snapshot(deviceName: deviceName)
+        let ignored = audio.running.filter { !countsAsMusic($0) }
+        return "output \"\(audio.outputName)\" (\(audio.isEarbuds ? "earbuds" : "not the earbuds")), playing [\(audio.running.filter(countsAsMusic).joined(separator: ", "))], ignored [\(ignored.joined(separator: ", "))]"
     }
 
     /// Pauses what is playing. `playing` is `playingBundles(to:)` taken a moment ago.
@@ -101,10 +124,12 @@ public enum MacPlayback {
             }
         }
         guard needsKey, isTrusted else {
+            DiagnosticLog.write("pause", "by name: [\(paused.players.joined(separator: ", "))]; key needed: \(needsKey), Accessibility allowed: \(isTrusted)")
             paused.bundles = paused.players
             return paused
         }
 
+        DiagnosticLog.write("pause", "by name: [\(paused.players.joined(separator: ", "))]; sending the Play/Pause key")
         sendPlayPause()
         try? await Task.sleep(for: verifyAfter)
 
@@ -126,22 +151,52 @@ public enum MacPlayback {
             paused.byKey = playing.contains { !paused.players.contains($0) }
         }
         paused.bundles = playing.filter { paused.players.contains($0) || paused.byKey }
+        DiagnosticLog.write("pause", "after the key: still playing [\(after.sorted().joined(separator: ", "))], key went to the wrong app: \(misfired), paused by key: \(paused.byKey), by name: [\(paused.players.joined(separator: ", "))]")
         return paused
     }
 
     /// Starts again only what `pause` stopped.
+    ///
+    /// The Play/Pause key goes to whichever app macOS considers the current "Now Playing" one, and after a
+    /// pause that can be a different app (Music, say, when a browser tab was paused). So the key is checked:
+    /// if it started an app that was not the one paused, that app is stopped again.
     @MainActor
-    public static func resume(_ paused: PausedMedia) {
+    public static func resume(_ paused: PausedMedia, deviceName: String) async {
         for bundle in paused.players { _ = tell(bundle, "play") }
-        if paused.byKey, isTrusted { sendPlayPause() }
+        guard paused.byKey else { return }
+        guard isTrusted else {
+            DiagnosticLog.write("resume", "needs the Play/Pause key, but Accessibility is not allowed")
+            return
+        }
+
+        let before = Set(playingBundles(to: deviceName))
+        sendPlayPause()
+        try? await Task.sleep(for: .milliseconds(1200))
+        let wrong = Set(playingBundles(to: deviceName)).subtracting(before).subtracting(paused.bundles)
+        DiagnosticLog.write("resume", "sent the Play/Pause key; started by it, other than what was paused: [\(wrong.sorted().joined(separator: ", "))]")
+        guard !wrong.isEmpty else { return }
+
+        var needsKey = false
+        for bundle in wrong where !(scriptablePlayers.contains(bundle) && tell(bundle, "pause")) { needsKey = true }
+        if needsKey { sendPlayPause() }
+        DiagnosticLog.write("resume", "the key went to the wrong app; stopped it again, so what was paused stays paused")
     }
 
     /// Tells a player to pause or play. Never launches it: an app that has quit is left alone.
     @MainActor
     private static func tell(_ bundle: String, _ verb: String) -> Bool {
-        guard !NSRunningApplication.runningApplications(withBundleIdentifier: bundle).isEmpty else { return false }
+        guard !NSRunningApplication.runningApplications(withBundleIdentifier: bundle).isEmpty else {
+            DiagnosticLog.write("script", "\(bundle) \(verb): not running")
+            return false
+        }
         var error: NSDictionary?
         _ = NSAppleScript(source: "tell application id \"\(bundle)\" to \(verb)")?.executeAndReturnError(&error)
+        if let error {
+            // -1743 means the Automation permission is missing or was denied.
+            DiagnosticLog.write("script", "\(bundle) \(verb): failed, error \(error[NSAppleScript.errorNumber] ?? "?"): \(error[NSAppleScript.errorMessage] ?? "")")
+        } else {
+            DiagnosticLog.write("script", "\(bundle) \(verb): ok")
+        }
         return error == nil
     }
 

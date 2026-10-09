@@ -181,3 +181,12 @@
 "The earbuds are connected but not answering the app." = "Os fones estão conectados, mas não respondem ao app.";
 "They talk to one app at a time. Close the Huawei app on your phone, or put the earbuds in the case and take them out." = "Eles falam com um app por vez. Feche o app da Huawei no celular, ou coloque os fones no estojo e tire de novo.";
 "Try again" = "Tentar de novo";
+
+/* Diagnostic log */
+"Diagnostic log" = "Registro de diagnóstico";
+"Record a diagnostic log" = "Gravar um registro de diagnóstico";
+"Records what the app sees and decides (earbuds in or out, which apps were making sound, permissions) to help find bugs. It does not record Bluetooth addresses, other devices' names or what you play. Turn it on, repeat the problem, then send the log." = "Grava o que o app vê e decide (fones na orelha ou fora, quais apps estavam tocando, permissões) para ajudar a achar erros. Não grava endereços Bluetooth, nomes de outros dispositivos nem o que você toca. Ligue, repita o problema e envie o registro.";
+"Copy log" = "Copiar registro";
+"Show in Finder" = "Mostrar no Finder";
+"Clear log" = "Apagar registro";
+"Copied" = "Copiado";

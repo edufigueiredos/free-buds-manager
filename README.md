@@ -167,6 +167,12 @@ closing it (a crash, a force quit), they ignore the next one until they are rese
 Huawei app on your phone, then press **Try again**. The app closes its channel properly when you quit, so quitting
 normally avoids this.
 
+**Diagnostic log.** If something does not work (for example, music does not pause or resume), open **Settings › App**,
+turn on **Record a diagnostic log**, repeat the problem, then press **Copy log** and paste it into an issue. The log keeps
+what the app saw and decided: earbuds in or out, which apps were making sound, whether the pause worked, and the
+permissions. It does not record Bluetooth addresses, the names of other devices or what you play. It is off by default,
+lives in `~/Library/Logs/Free Buds Manager/`, and rotates at 1 MB.
+
 **Logs.** `log stream --info --predicate 'subsystem == "io.github.edufigueiredos.FreeBudsManager"'` shows what the app sends
 and receives.
 
@@ -177,6 +183,12 @@ and receives.
 (travamento, encerramento forçado), ele ignora a próxima até ser reiniciado. Feche e abra o estojo, ou feche o app da
 Huawei no celular, e clique em **Tentar de novo**. O app fecha o canal direito quando você sai, então sair normalmente
 evita isso.
+
+**Registro de diagnóstico.** Se algo não funciona (por exemplo, a música não pausa ou não retoma), abra **Ajustes › App**,
+ligue **Gravar um registro de diagnóstico**, repita o problema, clique em **Copiar registro** e cole numa issue. O registro
+guarda o que o app viu e decidiu: fones na orelha ou fora, quais apps estavam tocando, se a pausa funcionou e as
+permissões. Não grava endereços Bluetooth, nomes de outros dispositivos nem o que você toca. Vem desligado, fica em
+`~/Library/Logs/Free Buds Manager/` e gira em 1 MB.
 
 **Logs.** `log stream --info --predicate 'subsystem == "io.github.edufigueiredos.FreeBudsManager"'` mostra o que o app
 envia e recebe.
