@@ -14,7 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let client = FreeBudsClient()
         self.client = client
         controller = MenuBarController(client: client)
-        // Handy for testing: `open FreeBudsManager.app --args --connect` asks macOS to connect the earbuds.
+        // Handy for testing: `open "Free Buds Manager.app" --args --connect` asks macOS to connect the earbuds.
         if CommandLine.arguments.contains("--connect") { client.connectToMac() }
     }
 

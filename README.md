@@ -109,7 +109,7 @@ The app is **not notarized** (that needs a paid Apple developer account). If mac
 app" and then says it could not, drag the app to Applications yourself and run this once in Terminal:
 
 ```bash
-xattr -dr com.apple.quarantine /Applications/FreeBudsManager.app
+xattr -dr com.apple.quarantine "/Applications/Free Buds Manager.app"
 ```
 
 <details open>
@@ -127,7 +127,7 @@ O app **não é notarizado** (isso exige uma conta paga de desenvolvedor da Appl
 Terminal:
 
 ```bash
-xattr -dr com.apple.quarantine /Applications/FreeBudsManager.app
+xattr -dr com.apple.quarantine "/Applications/Free Buds Manager.app"
 ```
 
 </details>
@@ -199,7 +199,7 @@ Needs Xcode 26 or later (the Liquid Glass theme uses the macOS 26 SDK; the app s
 
 ```bash
 swift test                 # protocol tests
-scripts/build-app.sh       # -> build/FreeBudsManager.app (universal, ad-hoc signed)
+scripts/build-app.sh       # -> build/Free Buds Manager.app (universal, ad-hoc signed)
 scripts/make-dmg.sh        # -> dist/FreeBudsManager-<version>.dmg
 scripts/preview.sh         # renders the screens to build/preview/*.png with sample data
 ```
@@ -214,7 +214,7 @@ Precisa do Xcode 26 ou superior (o tema Liquid Glass usa o SDK do macOS 26; o ap
 
 ```bash
 swift test                 # testes do protocolo
-scripts/build-app.sh       # -> build/FreeBudsManager.app (universal, assinatura ad-hoc)
+scripts/build-app.sh       # -> build/Free Buds Manager.app (universal, assinatura ad-hoc)
 scripts/make-dmg.sh        # -> dist/FreeBudsManager-<versão>.dmg
 scripts/preview.sh         # gera as telas em build/preview/*.png com dados de exemplo
 ```

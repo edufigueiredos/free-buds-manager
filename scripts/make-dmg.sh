@@ -1,10 +1,10 @@
 #!/bin/bash
-# Packs build/FreeBudsManager.app into dist/FreeBudsManager-<version>.dmg.
+# Packs build/Free Buds Manager.app into dist/FreeBudsManager-<version>.dmg.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 VERSION="${VERSION:-0.1.0}"
-APP="build/FreeBudsManager.app"
+APP="build/Free Buds Manager.app"
 STAGE="build/dmg"
 OUT="dist/FreeBudsManager-$VERSION.dmg"
 
@@ -17,4 +17,5 @@ ln -s /Applications "$STAGE/Applications"
 
 rm -f "$OUT"
 hdiutil create -volname "Free Buds Manager" -srcfolder "$STAGE" -ov -format UDZO "$OUT" >/dev/null
+rm -rf "$STAGE"   # keep a second copy of the app out of Spotlight
 echo "Created $OUT"

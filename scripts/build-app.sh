@@ -1,10 +1,10 @@
 #!/bin/bash
-# Builds build/FreeBudsManager.app (universal, ad-hoc signed unless SIGN_IDENTITY is set).
+# Builds build/Free Buds Manager.app (universal, ad-hoc signed unless SIGN_IDENTITY is set).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 VERSION="${VERSION:-0.1.0}"
-APP="build/FreeBudsManager.app"
+APP="build/Free Buds Manager.app"
 
 # Signing. Ad-hoc by default. macOS ties permissions such as Accessibility to the signature: with an ad-hoc
 # signature that is the build's own hash, so a permission is valid for the build it was given to, and the app

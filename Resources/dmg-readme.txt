@@ -13,7 +13,7 @@ notarized by Apple. Just drag the app to Applications yourself, then run this on
 Se o macOS disser que nao consegue instalar ou bloquear a primeira abertura, e porque o app nao e
 notarizado pela Apple. Arraste o app para Aplicativos e rode isto uma vez no Terminal:
 
-  xattr -dr com.apple.quarantine /Applications/FreeBudsManager.app
+  xattr -dr com.apple.quarantine "/Applications/Free Buds Manager.app"
 
 "Pause when removed" also needs Accessibility (System Settings > Privacy & Security > Accessibility)
 so the app can pause this Mac's music.
