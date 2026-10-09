@@ -77,6 +77,9 @@ public final class FreeBudsClient: ObservableObject {
     private var receivedSinceOpen = false
     private var silentAttempts = 0
     private var isOpening = false
+    private var openStartedAt: Date?
+    /// How long opening the control channel may take before the app gives up on it and tries again.
+    private static let openTimeout: TimeInterval = 12
     private var nextAttempt = Date.distantPast
     private var pending: [UInt16: (token: Int, continuation: CheckedContinuation<HuaweiPacket, Error>)] = [:]
     private var tokenCounter = 0
@@ -151,12 +154,28 @@ public final class FreeBudsClient: ObservableObject {
             return
         }
         if transport != nil, status == .connected { checkChannelIsAlive() }
+        abandonOpenThatNeverAnswers()
         guard transport == nil, !isOpening, Date() >= nextAttempt else { return }
         openChannel(to: device)
     }
 
+    /// When the Mac says the earbuds are connected but the Bluetooth link is in limbo (back from out of range,
+    /// say), asking for the control channel can wait forever without an answer. Without a limit the app stayed
+    /// on "connecting" until it was restarted.
+    private func abandonOpenThatNeverAnswers() {
+        guard isOpening, let started = openStartedAt, Date().timeIntervalSince(started) > Self.openTimeout else { return }
+        log.error("the control channel did not open in \(Int(Self.openTimeout), privacy: .public) s; trying again")
+        DiagnosticLog.write("channel", "the control channel did not open within \(Int(Self.openTimeout)) s; closed it and will try again")
+        tearDown()
+        silentAttempts += 1
+        status = .noAnswer
+        nextAttempt = Date().addingTimeInterval(silentAttempts < 3 ? 4 : 15)
+    }
+
     private func openChannel(to device: IOBluetoothDevice) {
         isOpening = true
+        openStartedAt = Date()
+        DiagnosticLog.write("channel", "opening the control channel (attempt after \(silentAttempts) silent ones)")
         if status != .noAnswer { status = .connecting }
         let transport = RFCOMMTransport(device: device)
         transport.onData = { [weak self] bytes in
@@ -170,6 +189,7 @@ public final class FreeBudsClient: ObservableObject {
             MainActor.assumeIsolated {
                 guard let self, self.transport === transport else { return }
                 self.isOpening = false
+                self.openStartedAt = nil
                 switch result {
                 case .success:
                     self.lastError = nil
@@ -251,6 +271,7 @@ public final class FreeBudsClient: ObservableObject {
         transport?.close()
         transport = nil
         isOpening = false
+        openStartedAt = nil
         decoder.reset()
         for (_, entry) in pending { entry.continuation.resume(throwing: ClientError.notConnected) }
         pending.removeAll()
